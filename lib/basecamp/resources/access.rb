@@ -25,7 +25,7 @@ module Basecamp
       def find(project_id, email)
         accesses = list(project_id)
         accesses.each do |access|
-          return access if(access["email_address"] == email)
+          return OpenStruct.new(access) if(access["email_address"] == email)
         end
         false
       end

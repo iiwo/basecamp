@@ -13,7 +13,7 @@ module Basecamp
          option = options.first
          @projects =  list
          @projects.each do |project|
-           return project if project[option.first] == option.second
+           return OpenStruct.new(project) if project[option.first] == option.second
          end
          nil
        rescue
@@ -25,10 +25,10 @@ module Basecamp
      def delete(options)
        begin
          option = options.first
-
          if(option.first == "name")
            project = find("name" => option.second)
-           id = project["id"]
+           return true if project.nil?
+           id = project.id
          else
            id = option.second
          end
@@ -43,8 +43,8 @@ module Basecamp
      def create(data)
        begin
          json_data = data.to_json
-         RestClient.post "#{Basecamp.site}/projects.json", json_data, :authorization => Basecamp.auth_header, :content_type => :json, :accept => :json
-         true
+         project = RestClient.post "#{Basecamp.site}/projects.json", json_data, :authorization => Basecamp.auth_header, :content_type => :json, :accept => :json
+         OpenStruct.new( ActiveSupport::JSON.decode  project )
        rescue
          false
        end
@@ -56,7 +56,7 @@ module Basecamp
          if project.nil?
            false
          else
-           Basecamp::Access.add_email(project["id"], email)
+           Basecamp::Access.add_email(project.id, email)
          end
        rescue
          false
@@ -66,7 +66,7 @@ module Basecamp
      def access_list(options)
        begin
          project = find(options)
-         Basecamp::Access.list(project["id"])
+         Basecamp::Access.list(project.id)
        rescue
          false
       end
@@ -77,9 +77,9 @@ module Basecamp
        if project.nil?
          false
        else
-         access = Basecamp::Access.find(project["id"], email)
+         access = Basecamp::Access.find(project.id, email)
          if access
-           Basecamp::Access.delete(access["id"], project["id"])
+           Basecamp::Access.delete(access.id, project.id)
          end
          true
        end
