@@ -1,5 +1,101 @@
-module Basecamp; class Project < Basecamp::Resource
-  def time_entries(options = {})
-    @time_entries ||= TimeEntry.find(:all, :params => options.merge(:project_id => id))
+module Basecamp
+
+  class Project < ActiveResource::Base
+   class << self
+
+     def list
+       ActiveSupport::JSON.decode RestClient.get "#{Basecamp.site}/projects.json", :authorization => Basecamp.auth_header
+     end
+
+     # "name" => "name"
+     def find(options)
+       begin
+         option = options.first
+         @projects =  list
+         @projects.each do |project|
+           return project if project[option.first] == option.second
+         end
+         nil
+       rescue
+         nil
+       end
+     end
+
+     # id or name
+     def delete(options)
+       begin
+         option = options.first
+
+         if(option.first == "name")
+           project = find("name" => option.second)
+           id = project["id"]
+         else
+           id = option.second
+         end
+         RestClient.delete "#{Basecamp.site}/projects/#{id}.json", :authorization => Basecamp.auth_header
+         true
+       rescue
+         false
+       end
+     end
+
+     #name => "name", :description => "description"
+     def create(data)
+       begin
+         json_data = data.to_json
+         RestClient.post "#{Basecamp.site}/projects.json", json_data, :authorization => Basecamp.auth_header, :content_type => :json, :accept => :json
+         true
+       rescue
+         false
+       end
+     end
+
+     def add_access(options, email)
+       begin
+         project = find(options)
+         if project.nil?
+           false
+         else
+           Basecamp::Access.add_email(project["id"], email)
+         end
+       rescue
+         false
+       end
+     end
+
+     def access_list(options)
+       begin
+         project = find(options)
+         Basecamp::Access.list(project["id"])
+       rescue
+         false
+      end
+     end
+
+     def delete_access(options, email)
+       project = find(options)
+       if project.nil?
+         false
+       else
+         access = Basecamp::Access.find(project["id"], email)
+         if access
+           Basecamp::Access.delete(access["id"], project["id"])
+         end
+         true
+       end
+     end
+
+     def name_exist(name)
+       begin
+         return true unless find("name" => name).nil?
+         false
+       rescue
+         false
+       end
+     end
+
+   end
+
   end
-end; end
+
+end
