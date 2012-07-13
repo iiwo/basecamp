@@ -25,13 +25,9 @@ module Basecamp
      def delete(options)
        begin
          option = options.first
-         if(option.first == "name")
-           project = find("name" => option.second)
-           return true if project.nil?
-           id = project.id
-         else
-           id = option.second
-         end
+         project = find(option.first => option.second)
+         return true if project.nil?
+         id = project.id
          RestClient.delete "#{Basecamp.site}/projects/#{id}.json", :authorization => Basecamp.auth_header
          true
        rescue

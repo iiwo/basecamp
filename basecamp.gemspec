@@ -2,7 +2,7 @@ require 'rubygems'
 
 Gem::Specification.new do |gem|
   gem.name = 'basecamp'
-  gem.version = '0.1.1'
+  gem.version = '0.1.2'
   gem.summary = %Q{Basecamp API wrapper.}
   gem.description = %Q{Basecamp API wrapper.}
   gem.email = "nobody@gmail.com"
